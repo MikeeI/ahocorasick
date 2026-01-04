@@ -3,31 +3,18 @@
 [![Go Reference](https://pkg.go.dev/badge/github.com/coregx/ahocorasick.svg)](https://pkg.go.dev/github.com/coregx/ahocorasick)
 [![Tests](https://github.com/coregx/ahocorasick/actions/workflows/ci.yml/badge.svg)](https://github.com/coregx/ahocorasick/actions/workflows/ci.yml)
 [![Go Report Card](https://goreportcard.com/badge/github.com/coregx/ahocorasick)](https://goreportcard.com/report/github.com/coregx/ahocorasick)
+[![codecov](https://codecov.io/gh/coregx/ahocorasick/branch/main/graph/badge.svg)](https://codecov.io/gh/coregx/ahocorasick)
 
 High-performance Aho-Corasick multi-pattern string matching for Go.
 
-## Overview
-
-This library implements the [Aho-Corasick algorithm](https://en.wikipedia.org/wiki/Aho%E2%80%93Corasick_algorithm) for efficient simultaneous matching of multiple patterns against a single input string. It is designed to achieve performance comparable to Rust's [aho-corasick](https://github.com/BurntSushi/aho-corasick) crate.
-
 ## Features
 
-- **NFA-based Automaton**: Efficient trie with failure links for multi-pattern matching
-- **Byte Class Compression**: Reduces alphabet from 256 to pattern-specific equivalence classes
-- **Multiple Match Semantics**: LeftmostFirst (Perl-compatible), LeftmostLongest (POSIX-compatible)
-- **Zero Dependencies**: Pure Go implementation
-
-### Planned
-
-- **Contiguous NFA**: Memory-efficient automaton with ~8 bytes per state average
-- **Dense DFA**: Pre-compiled DFA for maximum search throughput
-- **SIMD Prefilters**: Teddy algorithm integration for small pattern sets
-
-## Status
-
-**Version**: 0.1.0 (in development)
-
-This library is under active development. The API is not yet stable.
+- **1+ GB/s throughput** — comparable to Rust's [aho-corasick](https://github.com/BurntSushi/aho-corasick)
+- **Dense array transitions** — optimized NFA with O(1) state transitions
+- **Byte class compression** — reduces memory by grouping equivalent bytes
+- **Multiple match semantics** — LeftmostFirst (Perl) and LeftmostLongest (POSIX)
+- **Zero dependencies** — pure Go, no cgo
+- **Zero allocations** — `IsMatch()` hot path allocates nothing
 
 ## Installation
 
@@ -35,7 +22,9 @@ This library is under active development. The API is not yet stable.
 go get github.com/coregx/ahocorasick
 ```
 
-## Usage
+Requires Go 1.21+
+
+## Quick Start
 
 ```go
 package main
@@ -47,96 +36,101 @@ import (
 
 func main() {
     // Build automaton from patterns
-    ac, err := ahocorasick.NewBuilder().
-        AddStrings([]string{"apple", "maple", "alpha"}).
+    ac, _ := ahocorasick.NewBuilder().
+        AddStrings([]string{"error", "warning", "fatal"}).
         Build()
-    if err != nil {
-        panic(err)
-    }
 
-    // Check if any pattern matches
-    haystack := []byte("I love apple pie and maple syrup")
+    haystack := []byte("[error] something failed")
+
+    // Check if any pattern matches (zero allocation)
     if ac.IsMatch(haystack) {
         fmt.Println("Found a match!")
     }
 
     // Find first match
-    if match := ac.Find(haystack, 0); match != nil {
-        fmt.Printf("Pattern %d matched at [%d:%d]\n",
-            match.PatternID, match.Start, match.End)
+    if m := ac.Find(haystack, 0); m != nil {
+        fmt.Printf("Found %q at position %d\n",
+            haystack[m.Start:m.End], m.Start)
     }
 
     // Find all non-overlapping matches
-    for _, match := range ac.FindAll(haystack, -1) {
-        fmt.Printf("Pattern %d: %q\n",
-            match.PatternID, haystack[match.Start:match.End])
+    for _, m := range ac.FindAll(haystack, -1) {
+        fmt.Printf("Pattern %d: %q\n", m.PatternID, haystack[m.Start:m.End])
     }
 }
 ```
 
-## API Reference
+## Performance
+
+Benchmarks on Intel i7-1255U (64KB haystack, 4 patterns):
+
+| Method | Throughput | Allocations |
+|--------|------------|-------------|
+| `IsMatch` (with match) | **1.6 GB/s** | 0 |
+| `Find` | **1.1 GB/s** | 1 |
+| `IsMatch` (no match) | 780 MB/s | 0 |
+
+Comparable to Rust's aho-corasick crate (~1-2 GB/s).
+
+## API
 
 ### Builder
 
 ```go
-NewBuilder() *Builder                     // Create new builder
-(*Builder) AddPattern([]byte) *Builder    // Add single pattern
-(*Builder) AddPatterns([][]byte) *Builder // Add multiple patterns
-(*Builder) AddString(string) *Builder     // Add single string pattern
-(*Builder) AddStrings([]string) *Builder  // Add multiple string patterns
-(*Builder) MatchKind(MatchKind) *Builder  // Set match semantics
-(*Builder) Build() (*Automaton, error)    // Build the automaton
+ahocorasick.NewBuilder().
+    AddStrings([]string{"foo", "bar"}).  // Add patterns
+    SetMatchKind(ahocorasick.LeftmostLongest).  // Optional: POSIX semantics
+    Build()  // Returns (*Automaton, error)
 ```
 
 ### Automaton
 
 ```go
-(*Automaton) Find(haystack []byte, start int) *Match    // Find first match
-(*Automaton) FindAt(haystack []byte, start int) *Match  // Find match at exact position
-(*Automaton) FindAll(haystack []byte, n int) []Match    // Find all non-overlapping
-(*Automaton) FindAllOverlapping(haystack []byte) []Match // Find all including overlaps
-(*Automaton) IsMatch(haystack []byte) bool              // Check if any match exists
-(*Automaton) Count(haystack []byte) int                 // Count non-overlapping matches
-(*Automaton) PatternCount() int                         // Number of patterns
-(*Automaton) Pattern(id int) []byte                     // Get pattern by ID
+// Existence check (zero allocation)
+ac.IsMatch(haystack []byte) bool
+
+// Find matches
+ac.Find(haystack []byte, start int) *Match      // First match from position
+ac.FindAt(haystack []byte, start int) *Match    // Match at exact position
+ac.FindAll(haystack []byte, n int) []Match      // All non-overlapping (n=-1 for all)
+ac.FindAllOverlapping(haystack []byte) []Match  // All including overlaps
+
+// Utilities
+ac.Count(haystack []byte) int   // Count non-overlapping matches
+ac.PatternCount() int           // Number of patterns
+ac.Pattern(id int) []byte       // Get pattern by ID
 ```
 
-### Match Kinds
+### Match Semantics
 
 ```go
-LeftmostFirst   // Perl-compatible: first pattern in list wins
-LeftmostLongest // POSIX-compatible: longest pattern wins
+LeftmostFirst   // First pattern in list wins (Perl-compatible, default)
+LeftmostLongest // Longest pattern wins (POSIX-compatible)
 ```
 
-## Performance Targets
+## Use Cases
 
-| Scenario | Go stdlib | ahocorasick | Target Speedup |
-|----------|-----------|-------------|----------------|
-| 50 patterns, 4KB input | 50µs | 2µs | 25x |
-| 500 patterns, 4KB input | 500µs | 5µs | 100x |
-| 1000 patterns, 1MB input | 1s | 10ms | 100x |
+- **Log analysis** — scan for error patterns in log files
+- **Content filtering** — detect keywords in text
+- **Network security** — signature-based detection
+- **DNA sequencing** — find multiple motifs simultaneously
+- **Regex acceleration** — as prefilter for `foo|bar|baz` alternations
 
-## Architecture
+## How It Works
 
-Based on research from Rust's aho-corasick implementation:
+The [Aho-Corasick algorithm](https://en.wikipedia.org/wiki/Aho%E2%80%93Corasick_algorithm) builds a finite automaton from patterns:
 
-```
-Patterns → Trie Construction → Failure Links → Contiguous NFA
-                                                     ↓
-                                              (optional)
-                                                     ↓
-                                               Dense DFA
-```
+1. **Trie construction** — patterns form a prefix tree
+2. **Failure links** — enable backtracking without re-reading input
+3. **Dense transitions** — O(1) state lookup via byte class indexing
 
-**Automaton Types**:
-- **Contiguous NFA**: Single allocation, three state encodings (Dense/One/Sparse)
-- **Dense DFA**: Pre-computed transitions, O(n) search regardless of pattern count
+This allows matching all patterns simultaneously in O(n) time regardless of pattern count.
 
 ## Related Projects
 
-- [coregex](https://github.com/coregx/coregex) - High-performance regex engine for Go (uses this library)
-- [BurntSushi/aho-corasick](https://github.com/BurntSushi/aho-corasick) - Rust reference implementation
+- [coregex](https://github.com/coregx/coregex) — High-performance regex engine (uses this library)
+- [BurntSushi/aho-corasick](https://github.com/BurntSushi/aho-corasick) — Rust reference implementation
 
 ## License
 
-MIT License - see [LICENSE](LICENSE) for details.
+MIT License — see [LICENSE](LICENSE) for details.

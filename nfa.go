@@ -83,7 +83,7 @@ func (nfa *OptimizedNFA) buildTrie(patterns [][]byte) {
 
 	// Add each pattern to the trie
 	for patternID, pattern := range patterns {
-		nfa.addPattern(pattern, PatternID(patternID)) //nolint:gosec // G115: bounded
+		nfa.addPattern(pattern, PatternID(patternID))
 	}
 }
 
@@ -99,7 +99,7 @@ func (nfa *OptimizedNFA) addPattern(pattern []byte, patternID PatternID) {
 			state = next
 		} else {
 			// Create new state with dense transitions
-			newState := StateID(len(nfa.states)) //nolint:gosec // G115: bounded
+			newState := StateID(len(nfa.states)) //nolint:gosec // G115: state count bounded by patterns
 			nfa.states = append(nfa.states, optState{
 				trans: make([]StateID, nfa.alphabetLen),
 				fail:  0,
@@ -209,42 +209,6 @@ func (nfa *OptimizedNFA) precomputeRootTransitions() {
 	// For now, we keep the NFA approach but with dense transitions.
 }
 
-// nextState returns the next state after consuming byte b from state s.
-// Optimized: dense array lookup instead of map.
-func (nfa *OptimizedNFA) nextState(s StateID, b byte) StateID {
-	class := nfa.byteClasses.Get(b)
-
-	// Fast path for root state (no failure link following needed)
-	if s == nfa.startState {
-		if next := nfa.states[s].trans[class]; next != 0 {
-			return next
-		}
-		return nfa.startState // Stay at root
-	}
-
-	// Non-root states: follow failure links as needed
-	for {
-		if next := nfa.states[s].trans[class]; next != 0 {
-			return next
-		}
-		if s == nfa.startState {
-			return nfa.startState
-		}
-		s = nfa.states[s].fail
-	}
-}
-
-// isMatch returns true if state s is a match state.
-func (nfa *OptimizedNFA) isMatch(s StateID) bool {
-	return len(nfa.states[s].matches) > 0
-}
-
-// getMatches returns the pattern IDs that match at state s.
-func (nfa *OptimizedNFA) getMatches(s StateID) []PatternID {
-	return nfa.states[s].matches
-}
-
-// stateCount returns the number of states in the NFA.
-func (nfa *OptimizedNFA) stateCount() int {
-	return len(nfa.states)
-}
+// Note: nextState, isMatch, getMatches, stateCount methods removed.
+// Search is now performed via the compiled DFA (see dfa.go, automaton.go).
+// The NFA serves only as an intermediate representation for DFA construction.

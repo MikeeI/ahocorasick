@@ -148,6 +148,18 @@ Search: IsMatch / Find / FindAll
 - [coregex](https://github.com/coregx/coregex) — High-performance regex engine (uses this library)
 - [BurntSushi/aho-corasick](https://github.com/BurntSushi/aho-corasick) — Rust reference implementation
 
+
+
+## Star History
+
+<a href="https://starhistory.io">
+ <picture>
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.starhistory.io/png?repos=coregx/ahocorasick&style=dark" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.starhistory.io/png?repos=coregx/ahocorasick&style=professional" />
+   <img alt="Star History Chart" src="https://api.starhistory.io/png?repos=coregx/ahocorasick" width="800" />
+ </picture>
+</a>
+
 ## License
 
 MIT License — see [LICENSE](LICENSE) for details.

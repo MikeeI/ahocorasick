@@ -9,6 +9,9 @@ type OptimizedNFA struct {
 	// states stores all state data.
 	states []optState
 
+	// buildOrder stores states in failure-dependency order for DFA compilation.
+	buildOrder []StateID
+
 	// byteClasses maps bytes to equivalence classes.
 	byteClasses *ByteClasses
 
@@ -117,6 +120,7 @@ func (nfa *OptimizedNFA) addPattern(pattern []byte, patternID PatternID) {
 // buildFailureLinks computes failure links using BFS.
 func (nfa *OptimizedNFA) buildFailureLinks() {
 	queue := make([]StateID, 0, len(nfa.states))
+	nfa.buildOrder = append(nfa.buildOrder, nfa.startState)
 
 	// Initialize: children of root have failure link to root
 	root := &nfa.states[nfa.startState]
@@ -131,6 +135,7 @@ func (nfa *OptimizedNFA) buildFailureLinks() {
 	for len(queue) > 0 {
 		state := queue[0]
 		queue = queue[1:]
+		nfa.buildOrder = append(nfa.buildOrder, state)
 
 		// For each outgoing transition
 		for class := 0; class < nfa.alphabetLen; class++ {

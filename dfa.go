@@ -143,10 +143,16 @@ func buildDFA(nfa *OptimizedNFA, patterns [][]byte, matchKind MatchKind) *DFA {
 	tableSize := numStates * stride
 	d.trans = make([]uint32, tableSize)
 
-	for si := range numStates {
+	for _, stateID := range nfa.buildOrder {
+		si := int(stateID)
 		rowOffset := si << stride2
+		failOffset := int(nfa.states[stateID].fail) << stride2
 		for class := range alphabetLen {
-			next := resolveTransition(nfa, StateID(si), class)
+			next := nfa.states[stateID].trans[class]
+			if next == nfa.startState && stateID != nfa.startState {
+				d.trans[rowOffset+class] = d.trans[failOffset+class]
+				continue
+			}
 			premultiplied := uint32(next) << stride2
 			if isMatch[next] {
 				premultiplied |= matchFlag
@@ -186,20 +192,6 @@ func buildDFA(nfa *OptimizedNFA, patterns [][]byte, matchKind MatchKind) *DFA {
 	}
 
 	return d
-}
-
-// resolveTransition follows failure links to find the effective transition
-// for state s on byte class 'class'. This is done once at build time.
-func resolveTransition(nfa *OptimizedNFA, s StateID, class int) StateID {
-	for {
-		if next := nfa.states[s].trans[class]; next != 0 {
-			return next
-		}
-		if s == nfa.startState {
-			return nfa.startState
-		}
-		s = nfa.states[s].fail
-	}
 }
 
 // getMatches returns the pattern IDs that match at the given premultiplied state ID.

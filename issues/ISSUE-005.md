@@ -1,7 +1,7 @@
 # ISSUE-005 — Search: anchored misses scan beyond every possible match
 
 State: Investigating
-Authorized-Work: Not-Selected
+Authorized-Work: Pull-Request-Implementation
 Publication-Target: Not-Selected
 External-Reference: Not published.
 Contribution-Priority: Medium
@@ -51,10 +51,22 @@ Limit anchored scanning to the remaining haystack or the maximum compiled patter
 
 ## Publication-Blockers
 
-Representative measurements and upstream prior-art coverage are missing.
+Upstream prior-art coverage and a user-selected publication target are missing.
 
 ## Next-Action
 
-Summary: Prototype anchored bound
-Action: Benchmark a disposable maximum-length bound against the measured anchored-miss workload.
-Done-When: Runtime becomes input-length independent beyond the bound and matching tests remain unchanged.
+Summary: Research upstream prior art
+Action: Search upstream work for the same anchored-scan root cause before drafting a contribution.
+Done-When: Prior art is classified and the correct publication target is known.
+
+## Pull-Request-Implementation
+
+Branch: `perf/issue-005-find-at`
+Base: `upstream/main@d32beb4d396e0431f487ccf734a451a145ba7c53`
+Scope: Bound `FindAt` by the maximum compiled pattern length.
+Commit: `23b2ddd`
+Push: `origin/perf/issue-005-find-at`
+Checks:
+
+- `go test -race ./...` → passed.
+- Temporary benchmark → anchored miss fell from 93–107 µs to 7.3–8.0 ns at 65,536 bytes.

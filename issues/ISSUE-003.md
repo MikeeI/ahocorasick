@@ -1,7 +1,7 @@
 # ISSUE-003 — Build: propagated suffix matches duplicate large output lists
 
 State: Investigating
-Authorized-Work: Not-Selected
+Authorized-Work: Pull-Request-Implementation
 Publication-Target: Not-Selected
 External-Reference: Not published.
 Contribution-Priority: Medium
@@ -51,10 +51,23 @@ Store direct matches once, link inherited outputs, precompute the effective firs
 
 ## Publication-Blockers
 
-A complete constant-time first-match design, representative measurements, and upstream prior art are missing.
+Search-throughput comparison, upstream prior-art coverage, and a user-selected publication target are missing.
 
 ## Next-Action
 
-Summary: Prototype output links
-Action: Benchmark a disposable linked-output representation against the measured suffix-depth workload.
-Done-When: The prototype preserves results and materially reduces retained memory without harming search throughput.
+Summary: Research upstream prior art
+Action: Search upstream work for inherited-output representations before drafting a contribution.
+Done-When: Prior art is classified and the correct publication target is known.
+
+## Pull-Request-Implementation
+
+Branch: `perf/issue-003-output-links`
+Base: `upstream/main@d32beb4d396e0431f487ccf734a451a145ba7c53`
+Scope: Store direct matches once and traverse inherited outputs through links.
+Commit: `81f1592`
+Push: `origin/perf/issue-003-output-links`
+Checks:
+
+- `go test -race ./...` → passed.
+- Temporary suffix benchmark → allocation fell from about 10.05 MB to 1.15 MB at depth 256.
+- Temporary suffix benchmark → build time remained within overlapping 17.2–22.9 ms ranges.

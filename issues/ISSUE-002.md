@@ -1,7 +1,7 @@
 # ISSUE-002 — Search: maximal match still scans the remaining haystack
 
 State: Investigating
-Authorized-Work: Not-Selected
+Authorized-Work: Pull-Request-Implementation
 Publication-Target: Not-Selected
 External-Reference: Not published.
 Contribution-Priority: High
@@ -51,10 +51,22 @@ Store the maximum compiled pattern length and return once `Find` has a match of 
 
 ## Publication-Blockers
 
-Representative measurements and upstream prior-art coverage are missing.
+Upstream prior-art coverage and a user-selected publication target are missing.
 
 ## Next-Action
 
-Summary: Prototype longest-match exit
-Action: Benchmark a disposable maximum-length early exit against the measured `Count` workload.
-Done-When: Comparative measurements show linear scaling while all existing matching tests remain unchanged.
+Summary: Research upstream prior art
+Action: Search upstream work for the same maximal-match scan before drafting a contribution.
+Done-When: Prior art is classified and the correct publication target is known.
+
+## Pull-Request-Implementation
+
+Branch: `perf/issue-002-max-match`
+Base: `upstream/main@d32beb4d396e0431f487ccf734a451a145ba7c53`
+Scope: Stop `LeftmostLongest` search after finding a maximum-length pattern.
+Commit: `86a7a33`
+Push: `origin/perf/issue-002-max-match`
+Checks:
+
+- `go test -race ./...` → passed.
+- Temporary benchmark → `Count` fell from 8.12–8.81 ms to 31.9–35.0 µs at 2,048 bytes.

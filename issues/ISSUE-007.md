@@ -1,7 +1,7 @@
 # ISSUE-007 — Build: match propagation repeats the failure-link traversal
 
 State: Investigating
-Authorized-Work: Not-Selected
+Authorized-Work: Pull-Request-Implementation
 Publication-Target: Not-Selected
 External-Reference: Not published.
 Contribution-Priority: Low
@@ -51,10 +51,23 @@ Propagate match metadata while consuming the existing failure-link breadth-first
 
 ## Publication-Blockers
 
-Representative measurements and upstream prior-art coverage are missing.
+Upstream prior-art coverage and a user-selected publication target are missing.
 
 ## Next-Action
 
-Summary: Prototype traversal fusion
-Action: Benchmark disposable in-queue propagation against the isolated 4,096-pattern workload.
-Done-When: Comparative measurements remove the extra allocation and reduce build time without result changes.
+Summary: Research upstream prior art
+Action: Search upstream work for fused failure and output propagation before drafting a contribution.
+Done-When: Prior art is classified and the correct publication target is known.
+
+## Pull-Request-Implementation
+
+Branch: `perf/issue-007-propagation`
+Base: `upstream/main@d32beb4d396e0431f487ccf734a451a145ba7c53`
+Scope: Propagate matches while consuming the existing failure-link queue.
+Commit: `1444fc4`
+Push: `origin/perf/issue-007-propagation`
+Checks:
+
+- `go test -race ./...` → passed.
+- Temporary benchmark → build changed from 7.22–8.83 ms to 6.65–7.18 ms for 4,096 patterns.
+- Temporary benchmark → allocation fell from about 9.83 MB to 9.82 MB and removed one allocation.

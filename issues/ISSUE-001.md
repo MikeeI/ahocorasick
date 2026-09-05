@@ -1,7 +1,7 @@
 # ISSUE-001 — Search: repeated start-byte scans become quadratic
 
 State: Investigating
-Authorized-Work: Not-Selected
+Authorized-Work: Pull-Request-Implementation
 Publication-Target: Not-Selected
 External-Reference: Not published.
 Contribution-Priority: High
@@ -51,10 +51,23 @@ Use one membership-table scan for multiple start bytes while retaining `bytes.In
 
 ## Publication-Blockers
 
-Representative measurements and upstream prior-art coverage are missing.
+Upstream prior-art coverage and a user-selected publication target are missing.
 
 ## Next-Action
 
-Summary: Prototype prefilter fix
-Action: Benchmark a disposable shared-scan implementation against adversarial and candidate-free workloads.
-Done-When: Comparative measurements show the fix removes quadratic scaling without a material common-case regression.
+Summary: Research upstream prior art
+Action: Search upstream work for the same repeated-prefilter root cause before drafting a contribution.
+Done-When: Prior art is classified and the correct publication target is known.
+
+## Pull-Request-Implementation
+
+Branch: `perf/issue-001-prefilter`
+Base: `upstream/main@d32beb4d396e0431f487ccf734a451a145ba7c53`
+Scope: Bound later start-byte searches by the earliest candidate already found.
+Commit: `d998bef`
+Push: `origin/perf/issue-001-prefilter`
+Checks:
+
+- `go test -race ./...` → passed.
+- Temporary benchmark → repeated-candidate runtime fell from 13.2–14.5 ms to 297–326 µs at 65,536 bytes.
+- Temporary candidate-free benchmark → 1.11–1.25 µs at 65,536 bytes; the unchanged no-candidate algorithm remains SIMD-based.

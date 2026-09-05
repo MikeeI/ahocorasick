@@ -1,7 +1,7 @@
 # ISSUE-009 — Build: large byte alphabets wrap the class counter
 
 State: Investigating
-Authorized-Work: Not-Selected
+Authorized-Work: Pull-Request-Implementation
 Publication-Target: Not-Selected
 External-Reference: Not published.
 Contribution-Priority: High
@@ -50,10 +50,22 @@ Count classes with `int`; return singleton byte classes when all 256 byte values
 
 ## Publication-Blockers
 
-Upstream prior-art coverage and user-selected authorization and publication target are missing.
+Upstream prior-art coverage and a user-selected publication target are missing.
 
 ## Next-Action
 
-Summary: Research byte-class panic
-Action: Search upstream issues, pull requests, discussions, and releases for the same class-counter overflow.
-Done-When: Prior art is classified and the appropriate contribution target is known.
+Summary: Research upstream prior art
+Action: Search upstream work for the same class-counter overflow before drafting a contribution.
+Done-When: Prior art is classified and the correct publication target is known.
+
+## Pull-Request-Implementation
+
+Branch: `fix/issue-009-byte-classes`
+Base: `upstream/main@d32beb4d396e0431f487ccf734a451a145ba7c53`
+Scope: Prevent class-counter wrap for 255 and 256 distinct byte values.
+Commit: `3ae54d8`
+Push: `origin/fix/issue-009-byte-classes`
+Checks:
+
+- `go test -run '^TestByteClasses(LargeAlphabet)?$' -count=1` → passed.
+- `go test ./...` → passed.

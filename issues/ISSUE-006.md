@@ -1,7 +1,7 @@
 # ISSUE-006 — Build: DFA compilation repeatedly resolves identical failure chains
 
 State: Investigating
-Authorized-Work: Not-Selected
+Authorized-Work: Pull-Request-Implementation
 Publication-Target: Not-Selected
 External-Reference: Not published.
 Contribution-Priority: Low
@@ -51,10 +51,22 @@ Compile states in breadth-first order and copy missing transitions from each alr
 
 ## Publication-Blockers
 
-Representative build measurements and upstream prior-art coverage are missing.
+Upstream prior-art coverage and a user-selected publication target are missing.
 
 ## Next-Action
 
-Summary: Prototype row reuse
-Action: Benchmark disposable breadth-first row reuse against the measured deep-failure workload.
-Done-When: Comparative measurements approach transition-table scaling and preserve every generated transition.
+Summary: Research upstream prior art
+Action: Search upstream work for failure-row reuse before drafting a contribution.
+Done-When: Prior art is classified and the correct publication target is known.
+
+## Pull-Request-Implementation
+
+Branch: `perf/issue-006-dfa-build`
+Base: `upstream/main@d32beb4d396e0431f487ccf734a451a145ba7c53`
+Scope: Compile DFA states in dependency order and reuse resolved failure rows.
+Commit: `0037d88`
+Push: `origin/perf/issue-006-dfa-build`
+Checks:
+
+- `go test -race ./...` → passed.
+- Temporary benchmark → depth-4,096 build fell from 21.8–25.2 ms to 416–542 µs.

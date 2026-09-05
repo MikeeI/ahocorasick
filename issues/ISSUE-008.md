@@ -1,7 +1,7 @@
 # ISSUE-008 — Build: unused pattern bitmap scans every pattern byte
 
 State: Investigating
-Authorized-Work: Not-Selected
+Authorized-Work: Pull-Request-Implementation
 Publication-Target: Not-Selected
 External-Reference: Not published.
 Contribution-Priority: Low
@@ -51,10 +51,22 @@ Remove `patternBytes` and its inner construction loop while retaining pattern-le
 
 ## Publication-Blockers
 
-Representative measurements and upstream prior-art coverage are missing.
+Measured contribution value, upstream prior-art coverage, and a user-selected publication target are missing.
 
 ## Next-Action
 
-Summary: Compare bitmap removal
-Action: Benchmark a disposable build without `patternBytes` against the measured one-MiB workload.
-Done-When: Comparative measurements establish the end-to-end build benefit and preserve search behavior.
+Summary: Research upstream prior art
+Action: Search upstream work for removal or intended use of `patternBytes`.
+Done-When: Prior art determines whether deletion or restoration of a consumer is appropriate.
+
+## Pull-Request-Implementation
+
+Branch: `perf/issue-008-bitmap`
+Base: `upstream/main@d32beb4d396e0431f487ccf734a451a145ba7c53`
+Scope: Remove the unreferenced pattern bitmap and its construction pass.
+Commit: `3b75845`
+Push: `origin/perf/issue-008-bitmap`
+Checks:
+
+- `go test -race ./...` → passed.
+- Temporary end-to-end benchmark → before and after ranges overlapped at 224–252 ms for one MiB of duplicate pattern bytes.

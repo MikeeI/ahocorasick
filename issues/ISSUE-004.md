@@ -1,7 +1,7 @@
 # ISSUE-004 — Build: overflow match lists retain duplicate backing arrays
 
 State: Investigating
-Authorized-Work: Not-Selected
+Authorized-Work: Pull-Request-Implementation
 Publication-Target: Not-Selected
 External-Reference: Not published.
 Contribution-Priority: Medium
@@ -51,10 +51,22 @@ Point overflow entries at capacity-limited sections of the fully preallocated `m
 
 ## Publication-Blockers
 
-Retained-memory measurements and upstream prior-art coverage are missing.
+Post-fix retained-memory measurement, upstream prior-art coverage, and a user-selected publication target are missing.
 
 ## Next-Action
 
-Summary: Verify packed overflow slice
-Action: Benchmark a disposable overflow slice backed by `matchData` for count and offset overflow.
-Done-When: Comparative profiles remove duplicate retention while preserving IDs and ordering.
+Summary: Research upstream prior art
+Action: Search upstream work for the same overflow-retention root cause before drafting a contribution.
+Done-When: Prior art is classified and the correct publication target is known.
+
+## Pull-Request-Implementation
+
+Branch: `perf/issue-004-overflow`
+Base: `upstream/main@d32beb4d396e0431f487ccf734a451a145ba7c53`
+Scope: Back overflow entries with capacity-limited sections of packed match data.
+Commit: `3c17a88`
+Push: `origin/perf/issue-004-overflow`
+Checks:
+
+- `go test -race ./...` → passed.
+- Focused temporary assertion → the overflow slice shares the packed `matchData` backing array.

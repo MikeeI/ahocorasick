@@ -234,6 +234,25 @@ func TestByteClasses(t *testing.T) {
 	}
 }
 
+func TestByteClassesLargeAlphabet(t *testing.T) {
+	for _, size := range []int{254, 255, 256} {
+		t.Run(itoa(size), func(t *testing.T) {
+			pattern := make([]byte, size)
+			for i := range pattern {
+				pattern[i] = byte(i)
+			}
+
+			ac, err := NewBuilder().AddPattern(pattern).Build()
+			if err != nil {
+				t.Fatal(err)
+			}
+			if !ac.IsMatch(pattern) {
+				t.Fatal("expected full pattern to match")
+			}
+		})
+	}
+}
+
 func TestLiteralAlternation(t *testing.T) {
 	// This is the target use case for Issue #48
 	ac, err := NewBuilder().

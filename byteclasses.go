@@ -18,10 +18,19 @@ func NewByteClasses(patterns [][]byte) *ByteClasses {
 
 	// Track which bytes appear in patterns
 	used := [256]bool{}
+	usedCount := 0
 	for _, p := range patterns {
 		for _, b := range p {
-			used[b] = true
+			if !used[b] {
+				used[b] = true
+				usedCount++
+			}
 		}
+	}
+
+	// Class zero represents unused bytes, so a full alphabet needs identity mapping.
+	if usedCount == 256 {
+		return NewSingletonByteClasses()
 	}
 
 	// Assign classes:
@@ -30,16 +39,16 @@ func NewByteClasses(patterns [][]byte) *ByteClasses {
 	//
 	// More sophisticated grouping could merge bytes with identical
 	// transition behavior, but this simple approach works well.
-	class := byte(1)
-	for i := 0; i < 256; i++ {
+	class := 1
+	for i := range 256 {
 		if used[i] {
-			bc.classes[i] = class
+			bc.classes[i] = byte(class)
 			class++
 		}
 		// unused bytes stay at class 0
 	}
 
-	bc.numClasses = int(class)
+	bc.numClasses = class
 	return bc
 }
 

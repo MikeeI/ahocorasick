@@ -87,10 +87,10 @@ Body:
 ## Problem
 
 `Find` with `LeftmostLongest` continues scanning after finding a match whose length equals the longest compiled pattern.
-No later match can be longer, so the remaining scan cannot change the result.
+No later match can be strictly longer, so the remaining scan cannot replace that result under the current selection rule.
 `Count` amplifies this work because it repeatedly calls `Find` from each previous match end.
 
-With pattern `a` and a 2,048-byte `a` haystack, the previous implementation took 8.12–8.81 ms per `Count` call.
+In a dense single-byte match workload using pattern `a` and a 2,048-byte `a` haystack, the previous implementation took 8.12–8.81 ms per `Count` call.
 
 ## Change
 
@@ -98,7 +98,8 @@ With pattern `a` and a 2,048-byte `a` haystack, the previous implementation took
 - Return from `Find` once the best match reaches that maximum.
 - Add `BenchmarkCountLeftmostLongest` for the dense-match workload.
 
-The early return preserves leftmost ordering and equal-length tie behavior because later matches cannot be longer.
+The early return preserves the current strictly-longer replacement rule.
+Once a selected match reaches the maximum compiled pattern length, no later match can replace it.
 
 ## Results
 
@@ -107,6 +108,9 @@ On Go 1.27.1, linux/amd64, AMD Ryzen 9 5950X:
 | Workload | Before | After |
 | --- | ---: | ---: |
 | `Count`, pattern `a`, 2,048-byte `a` haystack | 8.12–8.81 ms/op | 30.1–33.4 µs/op |
+
+This is a deliberately dense single-byte worst case for repeated `LeftmostLongest` searches.
+It demonstrates the eliminated quadratic path rather than general `Count` throughput.
 
 The committed benchmark reports zero allocations.
 

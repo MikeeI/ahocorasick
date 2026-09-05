@@ -204,16 +204,16 @@ func (a *Automaton) IsMatch(haystack []byte) bool {
 	return false
 }
 
-// findEarliestStartByte returns the earliest position in data where any of the
-// start bytes occurs. Returns -1 if none found.
-// Uses bytes.IndexByte which is SIMD-accelerated on amd64.
+// findEarliestStartByte returns the first byte present in the configured set.
 func findEarliestStartByte(data []byte, startBytes []byte) int {
 	earliest := -1
-	for _, b := range startBytes {
-		if idx := bytes.IndexByte(data, b); idx >= 0 {
-			if earliest < 0 || idx < earliest {
-				earliest = idx
-			}
+	for _, value := range startBytes {
+		search := data
+		if earliest >= 0 {
+			search = data[:earliest]
+		}
+		if index := bytes.IndexByte(search, value); index >= 0 {
+			earliest = index
 		}
 	}
 	return earliest

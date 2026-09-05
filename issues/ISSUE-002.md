@@ -1,9 +1,9 @@
 # ISSUE-002 — Search: maximal match still scans the remaining haystack
 
-State: PR-Ready
+State: Submitted
 Authorized-Work: Pull-Request-Implementation
 Publication-Target: New-pull-request
-External-Reference: Not published.
+External-Reference: https://github.com/coregx/ahocorasick/pull/10
 Contribution-Priority: High
 Root-Cause-Confidence: High
 Finding-Category: Performance
@@ -57,9 +57,9 @@ None.
 
 ## Next-Action
 
-Summary: Await publication approval
-Action: Show the exact pull request target and draft to the user.
-Done-When: The user approves the current target and complete draft without changes.
+Summary: Monitor upstream review
+Action: Monitor pull request #10 and record maintainer feedback or merge evidence.
+Done-When: New upstream activity is reflected in this record.
 
 ## Pull-Request-Implementation
 

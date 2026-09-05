@@ -65,11 +65,6 @@ type DFA struct {
 	// no match can start there. Empty if too many start bytes (>3) or optimization
 	// is not beneficial.
 	startBytes []byte
-
-	// patternBytes is a 256-bit bitmap of all bytes appearing in any pattern.
-	// patternBytes[b/64] & (1 << (b%64)) != 0 means byte b appears in some pattern.
-	// Used for prefilter: regions with no pattern bytes can be skipped.
-	patternBytes [4]uint64
 }
 
 // nextPow2 returns the smallest power of 2 >= n.
@@ -120,9 +115,6 @@ func buildDFA(nfa *OptimizedNFA, patterns [][]byte, matchKind MatchKind) *DFA {
 		d.patternLens[i] = len(p)
 		if len(p) > 0 {
 			startByteSet[p[0]] = true
-		}
-		for _, b := range p {
-			d.patternBytes[b/64] |= 1 << (b % 64)
 		}
 	}
 

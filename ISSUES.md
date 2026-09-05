@@ -7,7 +7,7 @@ This file owns `Next finding ID` and projects current issue-file state.
 `Next-Action` is the 2–6 word `Next-Action/Summary` projection from the issue record.
 When a row disagrees with its issue file, correct the row from the issue file in the same task.
 
-Next finding ID: ISSUE-010
+Next finding ID: ISSUE-011
 
 ## Open-Findings
 
@@ -22,6 +22,7 @@ Next finding ID: ISSUE-010
 | [ISSUE-007](issues/ISSUE-007.md) | Build: match propagation repeats the failure-link traversal | Investigating | Pull-Request-Implementation | Not-Selected | Low | Research upstream prior art | Not published. |
 | [ISSUE-008](issues/ISSUE-008.md) | Build: unused pattern bitmap scans every pattern byte | Investigating | Pull-Request-Implementation | Not-Selected | Low | Research upstream prior art | Not published. |
 | [ISSUE-009](issues/ISSUE-009.md) | Build: large byte alphabets wrap the class counter | Investigating | Pull-Request-Implementation | Not-Selected | High | Research upstream prior art | Not published. |
+| [ISSUE-010](issues/ISSUE-010.md) | Search: LeftmostLongest selects later or shorter matches | Investigating | Not-Selected | Not-Selected | High | Map LeftmostLongest APIs | Not published. |
 
 ## Archived-Findings
 

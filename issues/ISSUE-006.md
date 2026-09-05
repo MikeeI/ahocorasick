@@ -18,13 +18,14 @@ Root-Cause [S]: DFA compilation independently follows the complete failure chain
 ## Reach-and-Impact
 
 Reach [S]: Every automaton build executes this compilation loop.
-Impact [S]: Pattern `a^L` causes quadratic failure-state inspections for an unused byte class alone.
+Impact [O]: Build time rose from 97–119 µs at depth 256 to 21.8–25.2 ms at depth 4,096.
 
 ## Evidence
 
 - [S] `dfa.go:146-155` — compilation invokes `resolveTransition` for every transition-table cell.
 - [S] `dfa.go:193-202` — each invocation follows failure links until finding a transition or root.
 - [S] Existing state IDs reflect insertion order and do not guarantee dependency-safe compilation order.
+- [O] `go test -run '^$' -bench '^BenchmarkEvidenceBuildDeepFailure$' -benchmem -benchtime=100ms -count=3` → 16× depth increased runtime by roughly 200–260×; Go 1.27.1, linux/amd64.
 
 ## Prior-Art
 
@@ -54,6 +55,6 @@ Representative build measurements and upstream prior-art coverage are missing.
 
 ## Next-Action
 
-Summary: Benchmark DFA compilation
-Action: Add a temporary scaling benchmark for deep failure chains and varied alphabets.
-Done-When: Measurements establish the practical cost and expected scaling improvement.
+Summary: Prototype row reuse
+Action: Benchmark disposable breadth-first row reuse against the measured deep-failure workload.
+Done-When: Comparative measurements approach transition-table scaling and preserve every generated transition.

@@ -18,13 +18,14 @@ Root-Cause [S]: Match propagation rebuilds and traverses the same breadth-first 
 ## Reach-and-Impact
 
 Reach [S]: Every normal build runs both traversals sequentially.
-Impact [S]: The second traversal adds `S×A` dense transition inspections and another `S`-sized queue lifecycle.
+Impact [O]: Isolated propagation over 4,096 two-byte patterns cost 505–610 µs and allocated 18,432 bytes.
 
 ## Evidence
 
 - [S] `nfa.go:118-158` — failure-link construction traverses all states and dense transition rows.
 - [S] `nfa.go:161-194` — match propagation immediately repeats that traversal with a separate queue.
 - [S] Failure targets have lower depth, so their match metadata is available during breadth-first processing.
+- [O] `go test -run '^$' -bench '^BenchmarkEvidencePropagateMatches$' -benchmem -benchtime=200ms -count=5` → 505–610 µs/op, 18,432 B/op, one allocation; Go 1.27.1, linux/amd64.
 
 ## Prior-Art
 
@@ -54,6 +55,6 @@ Representative measurements and upstream prior-art coverage are missing.
 
 ## Next-Action
 
-Summary: Measure duplicate traversal
-Action: Profile build time and allocations attributable to both NFA breadth-first traversals.
-Done-When: Measurements show whether traversal fusion has meaningful practical value.
+Summary: Prototype traversal fusion
+Action: Benchmark disposable in-queue propagation against the isolated 4,096-pattern workload.
+Done-When: Comparative measurements remove the extra allocation and reduce build time without result changes.

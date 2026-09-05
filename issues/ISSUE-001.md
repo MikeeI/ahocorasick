@@ -18,13 +18,14 @@ Root-Cause [S]: `IsMatch` repeatedly scans the complete remaining haystack once 
 ## Reach-and-Impact
 
 Reach [S]: Every `IsMatch` call with an enabled multi-byte prefilter can reach this path.
-Impact [A]: Adversarial sparse candidates can make scanned input quadratic; representative runtime impact remains unmeasured.
+Impact [O]: Runtime rose from 7.1–9.6 µs at 1,024 bytes to 13.2–14.5 ms at 65,536 bytes.
 
 ## Evidence
 
 - [S] `automaton.go:193-201` — returning to root invokes the prefilter over the complete remaining suffix.
 - [S] `automaton.go:210-218` — the helper calls `bytes.IndexByte` once per start byte without narrowing later scans.
 - [S] Patterns `ab,z` with `(ax)^r` make the absent `z` scan suffixes totaling `r(r+1)` bytes.
+- [O] `go test -run '^$' -bench '^BenchmarkEvidenceIsMatchRepeatedPrefilter$' -benchmem -benchtime=100ms -count=3` → 64× input increased runtime by roughly 1,500–2,000×; Go 1.27.1, linux/amd64, Ryzen 9 5950X.
 
 ## Prior-Art
 
@@ -54,6 +55,6 @@ Representative measurements and upstream prior-art coverage are missing.
 
 ## Next-Action
 
-Summary: Benchmark prefilter scaling
-Action: Add a temporary benchmark comparing adversarial, sparse, and candidate-free prefilter workloads.
-Done-When: Measurements establish whether one multi-byte scan improves representative and worst-case scaling.
+Summary: Prototype prefilter fix
+Action: Benchmark a disposable shared-scan implementation against adversarial and candidate-free workloads.
+Done-When: Comparative measurements show the fix removes quadratic scaling without a material common-case regression.

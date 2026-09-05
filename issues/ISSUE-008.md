@@ -18,13 +18,14 @@ Root-Cause [S]: DFA construction computes and retains `patternBytes`, but no pro
 ## Reach-and-Impact
 
 Reach [S]: Every automaton build scans every byte of every pattern for this bitmap.
-Impact [S]: The unused work adds one `O(M)` pattern-byte pass and 32 retained bytes per DFA.
+Impact [O]: The isolated bitmap loop cost 505–539 µs per MiB of pattern bytes.
 
 ## Evidence
 
 - [S] `dfa.go:69-72` — the DFA stores the 256-bit bitmap.
 - [S] `dfa.go:124-126` — construction updates it for every pattern byte.
 - [S] Complete symbol references contain only the field declaration and this write.
+- [O] `go test -run '^$' -bench '^BenchmarkEvidencePatternBitmapLoop$' -benchmem -benchtime=200ms -count=5` → 505–539 µs/MiB with zero allocations; Go 1.27.1, linux/amd64.
 
 ## Prior-Art
 
@@ -54,6 +55,6 @@ Representative measurements and upstream prior-art coverage are missing.
 
 ## Next-Action
 
-Summary: Measure bitmap overhead
-Action: Add a temporary build benchmark isolating increasing pattern-byte volume.
-Done-When: Measurements show whether removing the unused pass has contribution-worthy value.
+Summary: Compare bitmap removal
+Action: Benchmark a disposable build without `patternBytes` against the measured one-MiB workload.
+Done-When: Comparative measurements establish the end-to-end build benefit and preserve search behavior.

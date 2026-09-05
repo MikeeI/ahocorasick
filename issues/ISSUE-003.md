@@ -18,13 +18,14 @@ Root-Cause [S]: NFA match propagation copies every inherited suffix match into e
 ## Reach-and-Impact
 
 Reach [S]: Every build with suffix-related patterns performs propagation before DFA compilation.
-Impact [S]: Patterns `a^1…a^256,a^65536` produce 16,744,577 packed IDs, or 66,978,308 payload bytes.
+Impact [O]: Retained allocations rose from 2.67 MB at suffix depth 32 to about 10.05 MB at depth 256.
 
 ## Evidence
 
 - [S] `nfa.go:186-190` — each state appends its failure state's complete match list.
 - [S] `dfa.go:158-175` — DFA compilation counts and copies all expanded lists again.
 - [S] `dfa.go:136-153` — expanded lists also determine transition match flags.
+- [O] `go test -run '^$' -bench '^BenchmarkEvidenceBuildSuffixOutputs$' -benchmem -benchtime=100ms -count=3` → allocation bytes grew 3.8× as suffix depth grew 8×; Go 1.27.1, linux/amd64.
 
 ## Prior-Art
 
@@ -55,5 +56,5 @@ A complete constant-time first-match design, representative measurements, and up
 ## Next-Action
 
 Summary: Prototype output links
-Action: Design and benchmark a disposable linked-output representation without changing tracked source.
-Done-When: The prototype preserves all search results and improves retained memory without material throughput loss.
+Action: Benchmark a disposable linked-output representation against the measured suffix-depth workload.
+Done-When: The prototype preserves results and materially reduces retained memory without harming search throughput.

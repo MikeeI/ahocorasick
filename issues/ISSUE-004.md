@@ -18,13 +18,14 @@ Root-Cause [S]: Overflow entries retain original NFA match slices after the same
 ## Reach-and-Impact
 
 Reach [S]: Any state whose packed match count or offset exceeds `0xFFFF` enters this branch.
-Impact [S]: 65,536 duplicate patterns retain at least 262,144 bytes of duplicate ID payload.
+Impact [O]: A 65,536-entry overflow retained two separate 262,144-byte ID payloads.
 
 ## Evidence
 
 - [S] `dfa.go:173-175` — every match list is first copied into the fully preallocated packed array.
 - [S] `dfa.go:177-184` — overflow then stores the original slice instead of the packed section.
 - [S] `dfa.go:206-217` — all consumers read returned slices without mutation.
+- [O] `go test -run '^TestEvidenceOverflowRetention$' -v -count=1` → `matchDataBytes=262144 overflowBytes=262144`; Go 1.27.1, linux/amd64.
 
 ## Prior-Art
 
@@ -54,6 +55,6 @@ Retained-memory measurements and upstream prior-art coverage are missing.
 
 ## Next-Action
 
-Summary: Measure overflow retention
-Action: Capture retained heap for count-overflow and offset-overflow automata.
-Done-When: Profiles quantify duplicate retained storage for both overflow branches.
+Summary: Verify packed overflow slice
+Action: Benchmark a disposable overflow slice backed by `matchData` for count and offset overflow.
+Done-When: Comparative profiles remove duplicate retention while preserving IDs and ordering.

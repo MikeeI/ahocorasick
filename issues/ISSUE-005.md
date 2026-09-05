@@ -18,13 +18,14 @@ Root-Cause [S]: `FindAt` can continue past the maximum pattern length when failu
 ## Reach-and-Impact
 
 Reach [S]: Every unsuccessful anchored lookup with such a failure cycle reaches this path.
-Impact [S]: Pattern `aab` over `a^N` performs `N` transitions although no match can exceed three bytes.
+Impact [O]: Runtime rose from 1.48–1.88 µs at 1,024 bytes to 93–107 µs at 65,536 bytes.
 
 ## Evidence
 
 - [S] `automaton.go:107-145` — scanning stops on a root-state condition, not a pattern-length bound.
 - [S] Pattern `aab` keeps repeated `a` bytes in the state representing prefix `aa`.
 - [S] `automaton.go:126-127` discards later starts but does not stop further scanning.
+- [O] `go test -run '^$' -bench '^BenchmarkEvidenceFindAtMiss$' -benchmem -benchtime=100ms -count=3` → runtime scaled linearly with 64× input despite a three-byte maximum pattern; Go 1.27.1, linux/amd64.
 
 ## Prior-Art
 
@@ -54,6 +55,6 @@ Representative measurements and upstream prior-art coverage are missing.
 
 ## Next-Action
 
-Summary: Benchmark anchored misses
-Action: Add a temporary scaling benchmark for anchored misses with non-root failure cycles.
-Done-When: Measurements confirm bounded work after the maximum compiled pattern length.
+Summary: Prototype anchored bound
+Action: Benchmark a disposable maximum-length bound against the measured anchored-miss workload.
+Done-When: Runtime becomes input-length independent beyond the bound and matching tests remain unchanged.

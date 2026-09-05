@@ -39,6 +39,9 @@ type optState struct {
 	// matches lists pattern IDs that match at this state.
 	matches []PatternID
 
+	// output is the nearest failure state with direct matches, or zero.
+	output StateID
+
 	// depth is the depth from root.
 	depth int
 }
@@ -60,11 +63,6 @@ func buildOptimizedNFA(patterns [][]byte, bc *ByteClasses, matchKind MatchKind) 
 
 	// Phase 2: Compute failure links using BFS
 	nfa.buildFailureLinks()
-
-	// Phase 3: Propagate matches along failure links
-	if matchKind == LeftmostFirst || matchKind == LeftmostLongest {
-		nfa.propagateMatches()
-	}
 
 	// Phase 4: Precompute root transitions (key optimization!)
 	nfa.precomputeRootTransitions()
@@ -153,41 +151,12 @@ func (nfa *OptimizedNFA) buildFailureLinks() {
 				}
 				fail = nfa.states[fail].fail
 			}
-		}
-	}
-}
 
-// propagateMatches propagates match lists along failure links.
-func (nfa *OptimizedNFA) propagateMatches() {
-	queue := make([]StateID, 0, len(nfa.states))
-
-	// Start with children of root
-	root := &nfa.states[nfa.startState]
-	for class := 0; class < nfa.alphabetLen; class++ {
-		if child := root.trans[class]; child != 0 {
-			queue = append(queue, child)
-		}
-	}
-
-	// Process states in BFS order
-	for len(queue) > 0 {
-		stateID := queue[0]
-		queue = queue[1:]
-
-		state := &nfa.states[stateID]
-
-		// Add children to queue
-		for class := 0; class < nfa.alphabetLen; class++ {
-			if child := state.trans[class]; child != 0 {
-				queue = append(queue, child)
-			}
-		}
-
-		// Propagate matches from failure state
-		if state.fail != nfa.startState {
-			failMatches := nfa.states[state.fail].matches
-			if len(failMatches) > 0 {
-				state.matches = append(state.matches, failMatches...)
+			matchState := nfa.states[child].fail
+			if len(nfa.states[matchState].matches) > 0 {
+				nfa.states[child].output = matchState
+			} else {
+				nfa.states[child].output = nfa.states[matchState].output
 			}
 		}
 	}

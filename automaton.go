@@ -56,12 +56,10 @@ func (a *Automaton) Find(haystack []byte, start int) (Match, bool) {
 
 		// Rare path: match state reached. Clear the flag.
 		sid = raw & matchMask
-		matches := d.getMatches(sid)
-		if len(matches) == 0 {
+		patternID, ok := d.firstMatch(sid)
+		if !ok {
 			continue
 		}
-
-		patternID := matches[0]
 		matchEnd := i + 1
 		matchStart := matchEnd - patternLens[patternID]
 
@@ -118,28 +116,37 @@ func (a *Automaton) FindAt(haystack []byte, start int) (Match, bool) {
 		}
 
 		sid = raw & matchMask
-		for _, patternID := range d.getMatches(sid) {
-			patLen := patternLens[patternID]
-			matchEnd := i + 1
-			matchStart := matchEnd - patLen
+		matchSID := sid
+		for {
+			for _, patternID := range d.getMatches(matchSID) {
+				patLen := patternLens[patternID]
+				matchEnd := i + 1
+				matchStart := matchEnd - patLen
 
-			if matchStart != start {
-				continue
+				if matchStart != start {
+					continue
+				}
+
+				m := Match{
+					PatternID: int(patternID),
+					Start:     matchStart,
+					End:       matchEnd,
+				}
+
+				if a.matchKind == LeftmostFirst {
+					return m, true
+				}
+
+				if !found || m.Len() > bestMatch.Len() {
+					bestMatch = m
+					found = true
+				}
 			}
 
-			m := Match{
-				PatternID: int(patternID),
-				Start:     matchStart,
-				End:       matchEnd,
-			}
-
-			if a.matchKind == LeftmostFirst {
-				return m, true
-			}
-
-			if !found || m.Len() > bestMatch.Len() {
-				bestMatch = m
-				found = true
+			var ok bool
+			matchSID, ok = d.nextOutput(matchSID)
+			if !ok {
+				break
 			}
 		}
 	}
@@ -252,13 +259,10 @@ func (a *Automaton) FindAll(haystack []byte, n int) []Match {
 		}
 
 		sid = raw & matchMask
-		allMatches := d.getMatches(sid)
-		if len(allMatches) == 0 {
+		patternID, ok := d.firstMatch(sid)
+		if !ok {
 			continue
 		}
-
-		// For LeftmostFirst, take the first pattern.
-		patternID := allMatches[0]
 		patLen := patternLens[patternID]
 		matchEnd := i + 1
 		matchStart := matchEnd - patLen
@@ -302,15 +306,24 @@ func (a *Automaton) FindAllOverlapping(haystack []byte) []Match {
 		}
 
 		sid = raw & matchMask
-		for _, patternID := range d.getMatches(sid) {
-			matchEnd := i + 1
-			matchStart := matchEnd - patternLens[patternID]
+		matchSID := sid
+		for {
+			for _, patternID := range d.getMatches(matchSID) {
+				matchEnd := i + 1
+				matchStart := matchEnd - patternLens[patternID]
 
-			matches = append(matches, Match{
-				PatternID: int(patternID),
-				Start:     matchStart,
-				End:       matchEnd,
-			})
+				matches = append(matches, Match{
+					PatternID: int(patternID),
+					Start:     matchStart,
+					End:       matchEnd,
+				})
+			}
+
+			var ok bool
+			matchSID, ok = d.nextOutput(matchSID)
+			if !ok {
+				break
+			}
 		}
 	}
 

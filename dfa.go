@@ -36,6 +36,10 @@ type DFA struct {
 	// matchOverflow handles states where matchIndex encoding is insufficient.
 	matchOverflow map[uint32][]PatternID
 
+	// outputLink maps each state to its nearest failure state with direct matches.
+	// Values are state indexes plus one; zero means no inherited matches.
+	outputLink []uint32
+
 	// byteClasses maps bytes to equivalence classes.
 	byteClasses *ByteClasses
 
@@ -133,10 +137,15 @@ func buildDFA(nfa *OptimizedNFA, patterns [][]byte, matchKind MatchKind) *DFA {
 		}
 	}
 
-	// Precompute which states are match states.
+	// Precompute match states from direct and inherited outputs.
 	isMatch := make([]bool, numStates)
+	d.outputLink = make([]uint32, numStates)
 	for si := range numStates {
-		isMatch[si] = len(nfa.states[si].matches) > 0
+		output := nfa.states[si].output
+		if output != nfa.startState {
+			d.outputLink[si] = uint32(output) + 1
+		}
+		isMatch[si] = len(nfa.states[si].matches) > 0 || d.outputLink[si] != 0
 	}
 
 	// Build transition table with embedded match flags.
@@ -155,7 +164,7 @@ func buildDFA(nfa *OptimizedNFA, patterns [][]byte, matchKind MatchKind) *DFA {
 		}
 	}
 
-	// Pack match data contiguously.
+	// Pack direct match data contiguously; inherited matches follow output links.
 	var totalMatches int
 	for si := range numStates {
 		totalMatches += len(nfa.states[si].matches)
@@ -217,9 +226,34 @@ func (d *DFA) getMatches(sid uint32) []PatternID {
 	return d.matchData[offset : offset+count]
 }
 
+// firstMatch returns the first direct or inherited match for a state.
+func (d *DFA) firstMatch(sid uint32) (PatternID, bool) {
+	for {
+		if matches := d.getMatches(sid); len(matches) > 0 {
+			return matches[0], true
+		}
+		var ok bool
+		sid, ok = d.nextOutput(sid)
+		if !ok {
+			return 0, false
+		}
+	}
+}
+
+// nextOutput returns the next state with inherited direct matches.
+func (d *DFA) nextOutput(sid uint32) (uint32, bool) {
+	link := d.outputLink[sid>>d.stride2]
+	if link == 0 {
+		return 0, false
+	}
+	return (link - 1) << d.stride2, true
+}
+
 // MemoryUsage returns the approximate heap memory used by this DFA in bytes.
 func (d *DFA) MemoryUsage() int {
 	return len(d.trans)*4 +
 		len(d.matchIndex)*4 +
-		len(d.matchData)*4 + len(d.patternLens)*8
+		len(d.matchData)*4 +
+		len(d.outputLink)*4 +
+		len(d.patternLens)*8
 }

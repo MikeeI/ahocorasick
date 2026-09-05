@@ -61,11 +61,6 @@ func buildOptimizedNFA(patterns [][]byte, bc *ByteClasses, matchKind MatchKind) 
 	// Phase 2: Compute failure links using BFS
 	nfa.buildFailureLinks()
 
-	// Phase 3: Propagate matches along failure links
-	if matchKind == LeftmostFirst || matchKind == LeftmostLongest {
-		nfa.propagateMatches()
-	}
-
 	// Phase 4: Precompute root transitions (key optimization!)
 	nfa.precomputeRootTransitions()
 
@@ -153,41 +148,10 @@ func (nfa *OptimizedNFA) buildFailureLinks() {
 				}
 				fail = nfa.states[fail].fail
 			}
-		}
-	}
-}
 
-// propagateMatches propagates match lists along failure links.
-func (nfa *OptimizedNFA) propagateMatches() {
-	queue := make([]StateID, 0, len(nfa.states))
-
-	// Start with children of root
-	root := &nfa.states[nfa.startState]
-	for class := 0; class < nfa.alphabetLen; class++ {
-		if child := root.trans[class]; child != 0 {
-			queue = append(queue, child)
-		}
-	}
-
-	// Process states in BFS order
-	for len(queue) > 0 {
-		stateID := queue[0]
-		queue = queue[1:]
-
-		state := &nfa.states[stateID]
-
-		// Add children to queue
-		for class := 0; class < nfa.alphabetLen; class++ {
-			if child := state.trans[class]; child != 0 {
-				queue = append(queue, child)
-			}
-		}
-
-		// Propagate matches from failure state
-		if state.fail != nfa.startState {
-			failMatches := nfa.states[state.fail].matches
-			if len(failMatches) > 0 {
-				state.matches = append(state.matches, failMatches...)
+			if nfa.matchKind == LeftmostFirst || nfa.matchKind == LeftmostLongest {
+				failMatches := nfa.states[nfa.states[child].fail].matches
+				nfa.states[child].matches = append(nfa.states[child].matches, failMatches...)
 			}
 		}
 	}

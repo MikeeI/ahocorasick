@@ -69,6 +69,9 @@ type DFA struct {
 	// is not beneficial.
 	startBytes []byte
 
+	// startByteMask supports one-pass membership scans for multiple start bytes.
+	startByteMask [4]uint64
+
 	// patternBytes is a 256-bit bitmap of all bytes appearing in any pattern.
 	// patternBytes[b/64] & (1 << (b%64)) != 0 means byte b appears in some pattern.
 	// Used for prefilter: regions with no pattern bytes can be skipped.
@@ -136,6 +139,7 @@ func buildDFA(nfa *OptimizedNFA, patterns [][]byte, matchKind MatchKind) *DFA {
 	for b := range 256 {
 		if startByteSet[b] {
 			d.startBytes = append(d.startBytes, byte(b))
+			d.startByteMask[b/64] |= 1 << (b % 64)
 		}
 	}
 

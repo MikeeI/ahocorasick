@@ -76,6 +76,28 @@ func TestIsMatch(t *testing.T) {
 	}
 }
 
+func TestIsMatchMultipleStartByteOrdering(t *testing.T) {
+	tests := []struct {
+		name     string
+		patterns []string
+		haystack []byte
+	}{
+		{"present first", []string{"ab", "z"}, bytes.Repeat([]byte("ax"), 512)},
+		{"absent first", []string{"a", "zb"}, bytes.Repeat([]byte("zx"), 512)},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ac, err := NewBuilder().AddStrings(tt.patterns).Build()
+			if err != nil {
+				t.Fatal(err)
+			}
+			if ac.IsMatch(tt.haystack) {
+				t.Error("IsMatch() = true, want false")
+			}
+		})
+	}
+}
+
 func TestFindAll(t *testing.T) {
 	ac, err := NewBuilder().
 		AddStrings([]string{"a", "ab", "abc"}).
@@ -1053,5 +1075,32 @@ func BenchmarkCountLeftmostLongest(b *testing.B) {
 
 	for b.Loop() {
 		_ = ac.Count(haystack)
+	}
+}
+
+func BenchmarkIsMatchRepeatedPrefilter(b *testing.B) {
+	tests := []struct {
+		name     string
+		patterns []string
+		haystack []byte
+	}{
+		{"present-first", []string{"ab", "z"}, bytes.Repeat([]byte("ax"), 32*1024)},
+		{"absent-first", []string{"a", "zb"}, bytes.Repeat([]byte("zx"), 32*1024)},
+	}
+	for _, tt := range tests {
+		b.Run(tt.name, func(b *testing.B) {
+			ac, err := NewBuilder().AddStrings(tt.patterns).Build()
+			if err != nil {
+				b.Fatal(err)
+			}
+			if ac.IsMatch(tt.haystack) {
+				b.Fatal("benchmark haystack unexpectedly matches")
+			}
+			b.SetBytes(int64(len(tt.haystack)))
+			b.ReportAllocs()
+			for b.Loop() {
+				_ = ac.IsMatch(tt.haystack)
+			}
+		})
 	}
 }

@@ -199,7 +199,7 @@ func (a *Automaton) IsMatch(haystack []byte) bool {
 		// Re-engage prefilter when back at start state.
 		// This skips large runs of non-pattern bytes between potential matches.
 		if sid == 0 && len(sb) > 0 && i+1 < len(haystack) {
-			skip := findEarliestStartByte(haystack[i+1:], sb)
+			skip := findNextStartByte(haystack[i+1:], sb, &d.startByteMask)
 			if skip < 0 {
 				return false
 			}
@@ -210,19 +210,32 @@ func (a *Automaton) IsMatch(haystack []byte) bool {
 	return false
 }
 
-// findEarliestStartByte returns the earliest position in data where any of the
-// start bytes occurs. Returns -1 if none found.
-// Uses bytes.IndexByte which is SIMD-accelerated on amd64.
+// findEarliestStartByte uses bulk byte searches for a one-time initial scan.
 func findEarliestStartByte(data []byte, startBytes []byte) int {
 	earliest := -1
-	for _, b := range startBytes {
-		if idx := bytes.IndexByte(data, b); idx >= 0 {
-			if earliest < 0 || idx < earliest {
-				earliest = idx
-			}
+	for _, value := range startBytes {
+		search := data
+		if earliest >= 0 {
+			search = data[:earliest]
+		}
+		if index := bytes.IndexByte(search, value); index >= 0 {
+			earliest = index
 		}
 	}
 	return earliest
+}
+
+// findNextStartByte uses one pass so repeated scans never revisit a suffix per start byte.
+func findNextStartByte(data []byte, startBytes []byte, startByteMask *[4]uint64) int {
+	if len(startBytes) == 1 {
+		return bytes.IndexByte(data, startBytes[0])
+	}
+	for i, value := range data {
+		if startByteMask[value/64]&(1<<(value%64)) != 0 {
+			return i
+		}
+	}
+	return -1
 }
 
 // FindAll returns all non-overlapping matches in the haystack.

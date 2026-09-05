@@ -356,23 +356,48 @@ func TestPrefixPatterns(t *testing.T) {
 }
 
 func TestSuffixPatterns(t *testing.T) {
-	// Patterns that are suffixes of each other
-	ac, err := NewBuilder().
-		AddStrings([]string{"d", "cd", "bcd", "abcd"}).
-		Build()
-	if err != nil {
-		t.Fatal(err)
+	patterns := []string{"b", "ab", "cab", "b"}
+	haystack := []byte("cab")
+	want := []Match{
+		{PatternID: 2, Start: 0, End: 3},
+		{PatternID: 1, Start: 1, End: 3},
+		{PatternID: 0, Start: 2, End: 3},
+		{PatternID: 3, Start: 2, End: 3},
 	}
+	for _, kind := range []MatchKind{LeftmostFirst, LeftmostLongest} {
+		t.Run(itoa(int(kind)), func(t *testing.T) {
+			ac, err := NewBuilder().
+				SetMatchKind(kind).
+				AddStrings(patterns).
+				Build()
+			if err != nil {
+				t.Fatal(err)
+			}
 
-	haystack := []byte("abcd")
-	matches := ac.FindAllOverlapping(haystack)
+			matches := ac.FindAllOverlapping(haystack)
+			if len(matches) != len(want) {
+				t.Fatalf("FindAllOverlapping() returned %d matches, want %d", len(matches), len(want))
+			}
+			for i := range want {
+				if matches[i] != want[i] {
+					t.Errorf("FindAllOverlapping()[%d] = %+v, want %+v", i, matches[i], want[i])
+				}
+			}
 
-	// Should find all four patterns
-	if len(matches) != 4 {
-		t.Errorf("got %d matches, want 4", len(matches))
-		for _, m := range matches {
-			t.Logf("  match: pattern=%d text=%q", m.PatternID, haystack[m.Start:m.End])
-		}
+			match, found := ac.FindAt(haystack, 1)
+			if !found || match != want[1] {
+				t.Errorf("FindAt(1) = %+v, %v; want %+v, true", match, found, want[1])
+			}
+			if !ac.IsMatch(haystack) {
+				t.Error("IsMatch() = false, want true")
+			}
+			if matches := ac.FindAll(haystack, -1); len(matches) != 1 || matches[0] != want[0] {
+				t.Errorf("FindAll() = %+v, want [%+v]", matches, want[0])
+			}
+			if count := ac.Count(haystack); count != 1 {
+				t.Errorf("Count() = %d, want 1", count)
+			}
+		})
 	}
 }
 
@@ -1053,5 +1078,19 @@ func BenchmarkCountLeftmostLongest(b *testing.B) {
 
 	for b.Loop() {
 		_ = ac.Count(haystack)
+	}
+}
+
+func BenchmarkBuildSuffixOutputs(b *testing.B) {
+	patterns := make([][]byte, 256)
+	for i := range patterns {
+		patterns[i] = bytes.Repeat([]byte{'a'}, i+1)
+	}
+	b.ReportAllocs()
+
+	for b.Loop() {
+		if _, err := NewBuilder().AddPatterns(patterns).Build(); err != nil {
+			b.Fatal(err)
+		}
 	}
 }

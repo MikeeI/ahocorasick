@@ -103,8 +103,9 @@ func (a *Automaton) FindAt(haystack []byte, start int) (Match, bool) {
 
 	var bestMatch Match
 	found := false
+	end := min(len(haystack), start+d.maxPatternLen)
 
-	for i := start; i < len(haystack); i++ {
+	for i := start; i < end; i++ {
 		prevSid := sid
 		raw := trans[int(sid)+int(classes[haystack[i]])]
 

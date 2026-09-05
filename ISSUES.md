@@ -14,7 +14,7 @@ Next finding ID: ISSUE-010
 | ID | Finding | State | Authorized-Work | Publication-Target | Contribution-Priority | Next-Action | External-Reference |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | [ISSUE-001](issues/ISSUE-001.md) | Search: repeated start-byte scans become quadratic | Investigating | Pull-Request-Implementation | Not-Selected | High | Research upstream prior art | Not published. |
-| [ISSUE-002](issues/ISSUE-002.md) | Search: maximal match still scans the remaining haystack | Investigating | Pull-Request-Implementation | Not-Selected | High | Research upstream prior art | Not published. |
+| [ISSUE-002](issues/ISSUE-002.md) | Search: maximal match still scans the remaining haystack | PR-Ready | Pull-Request-Implementation | New-pull-request | High | Await publication approval | Not published. |
 | [ISSUE-003](issues/ISSUE-003.md) | Build: propagated suffix matches duplicate large output lists | Investigating | Pull-Request-Implementation | Not-Selected | Medium | Research upstream prior art | Not published. |
 | [ISSUE-004](issues/ISSUE-004.md) | Build: overflow match lists retain duplicate backing arrays | Investigating | Pull-Request-Implementation | Not-Selected | Medium | Research upstream prior art | Not published. |
 | [ISSUE-005](issues/ISSUE-005.md) | Search: anchored misses scan beyond every possible match | Investigating | Pull-Request-Implementation | Not-Selected | Medium | Research upstream prior art | Not published. |

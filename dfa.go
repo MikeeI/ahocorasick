@@ -181,7 +181,7 @@ func buildDFA(nfa *OptimizedNFA, patterns [][]byte, matchKind MatchKind) *DFA {
 			if d.matchOverflow == nil {
 				d.matchOverflow = make(map[uint32][]PatternID)
 			}
-			d.matchOverflow[uint32(si)] = matches
+			d.matchOverflow[uint32(si)] = d.matchData[offset : offset+count : offset+count]
 		}
 	}
 

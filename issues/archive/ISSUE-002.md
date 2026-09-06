@@ -1,6 +1,6 @@
 # ISSUE-002 — Search: maximal match still scans the remaining haystack
 
-State: Submitted
+State: Archived
 Authorized-Work: Pull-Request-Implementation
 Publication-Target: New-pull-request
 External-Reference: https://github.com/coregx/ahocorasick/pull/10
@@ -8,7 +8,7 @@ Contribution-Priority: High
 Root-Cause-Confidence: High
 Finding-Category: Performance
 Created: 2026-09-05
-Updated: 2026-09-05
+Updated: 2026-09-06
 Source: `upstream/main@d32beb4d396e0431f487ccf734a451a145ba7c53`
 
 ## Root-Cause
@@ -57,9 +57,9 @@ None.
 
 ## Next-Action
 
-Summary: Monitor upstream review
-Action: Monitor pull request #10 and record maintainer feedback or merge evidence.
-Done-When: New upstream activity is reflected in this record.
+Summary: —
+Action: None.
+Done-When: None.
 
 ## Pull-Request-Implementation
 
@@ -136,3 +136,10 @@ My intent is to help without wasting maintainer time or energy or discouraging t
 
 Thank you for your work.
 ```
+
+## Archive
+
+Archive-Reason: Merged
+Detail: None.
+Evidence: https://github.com/coregx/ahocorasick/pull/10 merged as `baa68307d00db467333d933dfb8dd5029d38bb18`.
+Checked: 2026-09-06

@@ -822,6 +822,52 @@ func TestByteClassesDisabled(t *testing.T) {
 	}
 }
 
+func TestPrefilterConfiguration(t *testing.T) {
+	patterns := []string{"alpha", "beta"}
+	defaultAC, err := NewBuilder().AddStrings(patterns).Build()
+	if err != nil {
+		t.Fatal(err)
+	}
+	enabledAC, err := NewBuilder().SetPrefilter(true).AddStrings(patterns).Build()
+	if err != nil {
+		t.Fatal(err)
+	}
+	disabledAC, err := NewBuilder().SetPrefilter(false).AddStrings(patterns).Build()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(defaultAC.dfa.startBytes) == 0 {
+		t.Error("default prefilter is disabled")
+	}
+	if len(enabledAC.dfa.startBytes) == 0 {
+		t.Error("explicitly enabled prefilter is disabled")
+	}
+	if len(disabledAC.dfa.startBytes) != 0 {
+		t.Errorf("disabled prefilter retained start bytes %v", disabledAC.dfa.startBytes)
+	}
+
+	haystack := append(bytes.Repeat([]byte{'x'}, 128), []byte("alpha")...)
+	for name, ac := range map[string]*Automaton{
+		"default":  defaultAC,
+		"enabled":  enabledAC,
+		"disabled": disabledAC,
+	} {
+		t.Run(name, func(t *testing.T) {
+			match, found := ac.Find(haystack, 0)
+			if !found {
+				t.Fatal("Find() did not find alpha")
+			}
+			if match.Start != 128 || match.End != len(haystack) {
+				t.Errorf("Find() = %+v, want Start=128 End=%d", match, len(haystack))
+			}
+			if !ac.IsMatch(haystack) {
+				t.Error("IsMatch() = false, want true")
+			}
+		})
+	}
+}
+
 func TestOverlappingPatternsDetailed(t *testing.T) {
 	// The classic "ushers" test from Aho-Corasick paper
 	ac, err := NewBuilder().

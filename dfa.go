@@ -100,7 +100,7 @@ func log2(n int) uint {
 
 // buildDFA compiles a DFA from a noncontiguous NFA.
 // The NFA must already have failure links and propagated matches.
-func buildDFA(nfa *OptimizedNFA, patterns [][]byte, matchKind MatchKind) *DFA {
+func buildDFA(nfa *OptimizedNFA, patterns [][]byte, matchKind MatchKind, prefilter bool) *DFA {
 	numStates := len(nfa.states)
 	alphabetLen := nfa.alphabetLen
 	stride := nextPow2(alphabetLen)
@@ -124,7 +124,7 @@ func buildDFA(nfa *OptimizedNFA, patterns [][]byte, matchKind MatchKind) *DFA {
 		if len(p) > d.maxPatternLen {
 			d.maxPatternLen = len(p)
 		}
-		if len(p) > 0 {
+		if prefilter && len(p) > 0 {
 			startByteSet[p[0]] = true
 		}
 		for _, b := range p {

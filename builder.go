@@ -97,7 +97,7 @@ func (b *Builder) Build() (*Automaton, error) {
 
 	// Phase 2: Compile NFA into a fully resolved DFA
 	// All failure transitions are pre-computed into the flat transition table.
-	dfa := buildDFA(nfa, b.patterns, b.matchKind)
+	dfa := buildDFA(nfa, b.patterns, b.matchKind, b.prefilter)
 
 	return &Automaton{
 		dfa:       dfa,

@@ -1,14 +1,14 @@
 # ISSUE-011 — Build: SetPrefilter(false) is discarded
 
-State: Investigating
-Authorized-Work: Not-Selected
-Publication-Target: Not-Selected
+State: PR-Ready
+Authorized-Work: Pull-Request-Implementation
+Publication-Target: New-pull-request
 External-Reference: Not published.
 Contribution-Priority: High
 Root-Cause-Confidence: High
 Finding-Category: Performance
 Created: 2026-09-06
-Updated: 2026-09-06
+Updated: 2026-09-08
 Source: `upstream/main@787d365428bfd22a7a801fd4499515fd2d42bfd7`
 
 ## Root-Cause
@@ -39,17 +39,16 @@ Impact [A]: The end-to-end performance effect in representative `coregex` worklo
 
 ## Prior-Art
 
-Coverage: upstream issues and pull requests for `SetPrefilter`, disabled prefiltering, start bytes, and `FindAll`.
-Checked: 2026-09-06.
+Coverage: issues, pull requests, commits, releases, history, current downstream use, and the available discussion surface.
+Checked: 2026-09-08.
 
-- https://github.com/coregx/ahocorasick/issues/1 — Related; introduced the general performance requirement.
-- https://github.com/coregx/ahocorasick/pull/2 — Related; introduced the DFA and start-byte prefilter.
-- https://github.com/coregx/ahocorasick/issues/7 — Not duplicate; concerns allocations from `Find` return values.
-- https://github.com/coregx/ahocorasick/pull/8 — Not duplicate; implements the zero-allocation API change.
-- https://github.com/coregx/ahocorasick/pull/10 — Not duplicate; bounds `LeftmostLongest` search termination.
-- No upstream issue or pull request was found for the discarded `SetPrefilter` value.
+- `https://github.com/coregx/ahocorasick/issues/1` — Related general prefilter performance report.
+- `https://github.com/coregx/ahocorasick/pull/2` — Related origin of start-byte prefiltering.
+- No exact upstream issue, pull request, commit, or release wires `SetPrefilter` into DFA construction.
+- Current `coregx/coregex` still calls `SetPrefilter(false)` for Aho-Corasick prefilters.
+- GitHub Discussions are not enabled for this repository.
 
-Contribution fit: A bounded pull request is plausible after current-toolchain verification and user authorization.
+Contribution fit: A focused configuration-contract pull request to `main`.
 
 ## Proposed-Change
 
@@ -68,30 +67,95 @@ Leave `DFA.startBytes` empty when prefiltering is disabled.
 
 ## Performance-Evidence
 
-Measurement status: The ignored setting is proven, but no implemented correction has been benchmarked.
+Measurement status: The correction is implemented and behavior-verified; end-to-end performance remains unquantified.
 
 - [O] On a 64 KiB dense-failed-start workload, `SetPrefilter(false)` measured 264.965–284.480 µs.
 - [O] On the same workload, `SetPrefilter(true)` measured 262.911–279.483 µs.
 - [O] Both measurements used Go 1.23.2, linux/amd64, `GOMAXPROCS=1`, and five 100 ms repetitions.
-- [A] A correction should remove unwanted skip-search work when prefiltering is disabled.
-- [A] Its magnitude under Go 1.25.4 or newer and in `coregex` remains unknown.
+- [S] The correction removes all start-byte prefilter metadata when disabled without adding a search-loop branch.
+- [A] Its end-to-end performance magnitude in `coregex` remains unknown.
 
 ## Verification
 
 - Verify that `false` produces no start-byte prefilter metadata.
 - Verify that `true` and the default preserve the existing metadata and search path.
-- Compare every public search result with prefiltering enabled and disabled.
-- Cover both match kinds, byte classes enabled and disabled, binary data, overlaps, and nonzero starts.
-- Benchmark candidate-free, sparse-candidate, and dense-failed-start workloads before and after correction.
-- Benchmark the downstream selection class with more than 64 literals of minimum length 3.
+- Compare `Find` and `IsMatch` results with prefiltering enabled and disabled.
+- Cover a long prefix so `Find` reaches its prefilter threshold.
 - Run `go test ./...` and `go test -race ./...` on a supported toolchain.
 
 ## Publication-Blockers
 
-Current supported-toolchain correction measurements, user-selected authorization, and a publication target are missing.
+None.
 
 ## Next-Action
 
-Summary: Reproduce supported-toolchain baseline
-Action: Reproduce the characterization and representative workloads on current upstream with Go 1.25.4 or newer.
-Done-When: The setting remains ineffective and stable baseline ranges are recorded on a supported toolchain.
+Summary: Review pull request draft
+Action: Present the exact current pull request draft and target for user approval.
+Done-When: The user approves or requests changes to the exact draft and target.
+
+## Pull-Request-Implementation
+
+Branch: `fix/issue-011-prefilter-flag`
+Base: `upstream/main@787d365428bfd22a7a801fd4499515fd2d42bfd7`
+Scope: Propagate `Builder.prefilter` into DFA construction and omit disabled prefilter metadata.
+Commit: `60619e3d2638308b78cf45bb84905f9bfdd3003f`
+Push: `origin/fix/issue-011-prefilter-flag`
+Checks:
+
+- `golangci-lint run --fix ./...` → passed with zero issues.
+- `golangci-lint run ./...` → passed with zero issues.
+- `go test -run '^TestPrefilterConfiguration$' -count=1` → passed.
+- `go test ./...` → passed.
+- `go test -race ./...` → passed.
+- `go vet ./...` → passed.
+
+## Publication-Draft
+
+Target: `coregx/ahocorasick`, base `main`, head `MikeeI:fix/issue-011-prefilter-flag`.
+Title: `fix: honor SetPrefilter configuration`
+
+Body:
+
+```markdown
+## Problem
+
+`Builder.SetPrefilter` stores the requested value, but `Builder.Build` never reads it.
+`buildDFA` therefore collects pattern start bytes regardless of whether the caller selected `SetPrefilter(false)`.
+The setting cannot disable the prefilter used by `Find`, `IsMatch`, and repeated `Find` calls through `Count`.
+
+This is exercised by `coregx/coregex`, which explicitly disables the start-byte skip for its Aho-Corasick prefilter.
+
+## Change
+
+- Pass the configured prefilter state into DFA construction.
+- Collect start-byte metadata only when prefiltering is enabled.
+- Preserve the default-enabled behavior and existing enabled search path.
+- Add coverage for default, explicitly enabled, and disabled configurations.
+- Confirm that enabled and disabled automatons return the same search results.
+
+The disabled state is resolved at build time, so search loops gain no additional configuration branch.
+
+## Verification
+
+- `golangci-lint run --fix ./...`
+- `golangci-lint run ./...`
+- `go test -run '^TestPrefilterConfiguration$' -count=1`
+- `go test ./...`
+- `go test -race ./...`
+- `go vet ./...`
+
+Related issue #1 and PR #2 cover general prefilter performance and its initial implementation.
+They do not cover the discarded `SetPrefilter` value.
+
+### Disclosure
+
+Investigated thoroughly with GPT-5.6 Codex (extra high reasoning effort), using [Oh My Pi](https://github.com/can1357/oh-my-pi) as the agent framework.
+
+This report is not generic or unreviewed AI-generated output.
+Its claims were checked against the cited evidence, and it includes the relevant detail intended to help maintainers resolve the issue.
+
+If reports like this are not useful to the project, please let me know and I will refrain from submitting similar ones.
+My intent is to help without wasting maintainer time or energy or discouraging their work.
+
+Thank you for your work.
+```

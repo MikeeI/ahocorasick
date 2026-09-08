@@ -13,16 +13,16 @@ Next finding ID: ISSUE-013
 
 | ID | Finding | State | Authorized-Work | Publication-Target | Contribution-Priority | Next-Action | External-Reference |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| [ISSUE-001](issues/ISSUE-001.md) | Search: repeated start-byte scans become quadratic | Investigating | Pull-Request-Implementation | Not-Selected | High | Research upstream prior art | Not published. |
-| [ISSUE-003](issues/ISSUE-003.md) | Build: propagated suffix matches duplicate large output lists | Investigating | Pull-Request-Implementation | Not-Selected | Medium | Research upstream prior art | Not published. |
+| [ISSUE-001](issues/ISSUE-001.md) | Search: repeated start-byte scans become quadratic | PR-Ready | Pull-Request-Implementation | New-pull-request | High | Review pull request draft | Not published. |
+| [ISSUE-003](issues/ISSUE-003.md) | Build: propagated suffix matches duplicate large output lists | PR-Ready | Pull-Request-Implementation | New-pull-request | Medium | Review pull request draft | Not published. |
 | [ISSUE-004](issues/ISSUE-004.md) | Build: overflow match lists retain duplicate backing arrays | Investigating | Pull-Request-Implementation | Not-Selected | Medium | Research upstream prior art | Not published. |
 | [ISSUE-005](issues/ISSUE-005.md) | Search: anchored misses scan beyond every possible match | Investigating | Pull-Request-Implementation | Not-Selected | Medium | Research upstream prior art | Not published. |
 | [ISSUE-006](issues/ISSUE-006.md) | Build: DFA compilation repeatedly resolves identical failure chains | Investigating | Pull-Request-Implementation | Not-Selected | Low | Research upstream prior art | Not published. |
 | [ISSUE-007](issues/ISSUE-007.md) | Build: match propagation repeats the failure-link traversal | Investigating | Pull-Request-Implementation | Not-Selected | Low | Research upstream prior art | Not published. |
 | [ISSUE-008](issues/ISSUE-008.md) | Build: unused pattern bitmap scans every pattern byte | Investigating | Pull-Request-Implementation | Not-Selected | Low | Research upstream prior art | Not published. |
-| [ISSUE-009](issues/ISSUE-009.md) | Build: large byte alphabets wrap the class counter | Investigating | Pull-Request-Implementation | Not-Selected | High | Research upstream prior art | Not published. |
+| [ISSUE-009](issues/ISSUE-009.md) | Build: large byte alphabets wrap the class counter | PR-Ready | Pull-Request-Implementation | New-pull-request | High | Review pull request draft | Not published. |
 | [ISSUE-010](issues/ISSUE-010.md) | Search: LeftmostLongest selects later or shorter matches | Investigating | Not-Selected | Not-Selected | High | Map LeftmostLongest APIs | Not published. |
-| [ISSUE-011](issues/ISSUE-011.md) | Build: SetPrefilter(false) is discarded | Investigating | Not-Selected | Not-Selected | High | Reproduce supported-toolchain baseline | Not published. |
+| [ISSUE-011](issues/ISSUE-011.md) | Build: SetPrefilter(false) is discarded | PR-Ready | Pull-Request-Implementation | New-pull-request | High | Review pull request draft | Not published. |
 | [ISSUE-012](issues/ISSUE-012.md) | Search: aggregate APIs scan impossible initial prefixes | Investigating | Not-Selected | Not-Selected | Medium | Validate representative workload | Not published. |
 
 ## Archived-Findings
